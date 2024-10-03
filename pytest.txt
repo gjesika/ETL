@@ -1,0 +1,12 @@
+
+import pytest
+import pandas as pd
+
+def test_transform_data():
+    df = pd.DataFrame({'customer_name': [None, 'Alice'], 'email': ['ALICE@EMAIL.COM', None]})
+    transform_data(df)  # Assuming transform_data is modified to take a DataFrame
+    assert df['customer_name'].iloc[0] == 'Unknown'
+    assert df['email'].iloc[1] == 'unknown@example.com'
+
+if __name__ == "__main__":
+    pytest.main()

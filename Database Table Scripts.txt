@@ -1,0 +1,58 @@
+-- Creates the Addresses Table
+CREATE TABLE Addresses (
+    address_id SERIAL PRIMARY KEY,
+    street VARCHAR(255),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    zip_code VARCHAR(20)
+);
+
+-- Creates the Categories Table
+CREATE TABLE Categories (
+    category_id SERIAL PRIMARY KEY,
+    category_name VARCHAR(100)
+);
+
+-- Creates the Products Table
+CREATE TABLE Products (
+    product_id SERIAL PRIMARY KEY,
+    product_name VARCHAR(255),
+    category_id INT REFERENCES Categories(category_id)
+);
+
+-- Creates the Time Table
+CREATE TABLE Time (
+    time_id SERIAL PRIMARY KEY,
+    date DATE,
+    month INT,
+    quarter INT,
+    year INT
+);
+
+-- Creates the Customers Table
+CREATE TABLE Customers (
+    customer_id SERIAL PRIMARY KEY,
+    customer_name VARCHAR(255),
+    email VARCHAR(255),
+    phone VARCHAR(50),
+    address_id INT REFERENCES Addresses(address_id)
+);
+
+-- Creates the Sales Table
+CREATE TABLE Sales (
+    sales_id SERIAL PRIMARY KEY,
+    product_id INT REFERENCES Products(product_id),
+    customer_id INT REFERENCES Customers(customer_id),
+    time_id INT REFERENCES Time(time_id),
+    quantity INT,
+    total_amount DECIMAL(10, 2)
+);
+
+-- Creates the Orders Table
+CREATE TABLE Orders (
+    order_id SERIAL PRIMARY KEY,
+    customer_id INT REFERENCES Customers(customer_id),
+    time_id INT REFERENCES Time(time_id),
+    order_status VARCHAR(50),
+    order_total DECIMAL(10, 2)
+);

@@ -1,0 +1,62 @@
+Queries Reports
+
+1. Total Sales by Product
+
+SELECT 
+    P.product_name, 
+    SUM(S.total_amount) AS total_sales
+FROM 
+    Products P
+JOIN 
+    Sales S ON P.product_id = S.product_id
+GROUP BY 
+    P.product_name
+ORDER BY 
+    total_sales DESC;  -- Orders by total sales in descending order
+
+2.Daily Sales Trends
+
+SELECT 
+    T.date, 
+    SUM(S.total_amount) AS total_sales
+FROM 
+    Sales S
+JOIN 
+    Time T ON S.time_id = T.time_id
+GROUP BY 
+    T.date
+ORDER BY 
+    T.date;
+
+3.Top 10 Customers by Total Sales
+
+SELECT 
+    C.customer_name, 
+    SUM(S.total_amount) AS total_spent
+FROM 
+    Customers C
+JOIN 
+    Sales S ON C.customer_id = S.customer_id
+GROUP BY 
+    C.customer_name
+ORDER BY 
+    total_spent DESC
+LIMIT 10;  -- Adjust this if using SQL Server (use TOP 10 instead)
+
+4.Sales by Month
+
+SELECT 
+    T.year, 
+    T.month, 
+    SUM(S.total_amount) AS total_sales
+FROM 
+    Sales S
+JOIN 
+    Time T ON S.time_id = T.time_id
+GROUP BY 
+    T.year, 
+    T.month
+ORDER BY 
+    T.year, 
+    T.month;
+

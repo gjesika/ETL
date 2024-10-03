@@ -1,0 +1,65 @@
+import pandas as pd
+from faker import Faker
+import pyodbc
+import requests
+
+# Data generation
+fake = Faker()
+customers = [{'customer_name': fake.name(), 'email': fake.email(), 'phone': fake.phone_number()} for _ in range(100)]
+products = [{'product_name': fake.word()} for _ in range(50)]
+
+customers_df = pd.DataFrame(customers)
+products_df = pd.DataFrame(products)
+
+# Save to CSV 
+customers_df.to_csv('customers.csv', index=False)
+products_df.to_csv('products.csv', index=False)
+
+# Fetch data from a public API
+response = requests.get("https://api.exchangerate-api.com/v4/latest/USD")
+exchange_rates = response.json()
+
+# Transformations
+def transform_data():
+    # Clean and normalize customer data
+    customers_df['phone'] = customers_df['phone'].str.strip()  # Remove leading/trailing spaces
+    customers_df['email'] = customers_df['email'].str.lower()   # Normalize email to lowercase
+
+    # Handle null values for customers
+    customers_df['customer_name'] = customers_df['customer_name'].fillna("Unknown")
+    customers_df['email'] = customers_df['email'].fillna("unknown@example.com")  # Set a default email
+    customers_df['phone'] = customers_df['phone'].fillna("N/A")  # Set a default phone number
+
+    # Clean product names
+    products_df['product_name'] = products_df['product_name'].str.strip()  # Clean product names
+
+    # Handle null values for products
+    products_df['product_name'] = products_df['product_name'].fillna("Unknown Product")  # Set a default product name
+
+# Load data into SQL Server
+def load_data():
+    conn = pyodbc.connect('DRIVER={SQL Server};SERVER=DESKTOP-52JO42B;DATABASE=xhesi;Trusted_Connection=yes;')
+    cursor = conn.cursor()
+
+    # Load customers with duplicate check and null handling
+    for index, row in customers_df.iterrows():
+        if pd.notnull(row['email']) and pd.notnull(row['customer_name']):  # Ensure critical fields are not null
+            cursor.execute("SELECT COUNT(*) FROM Customers WHERE email = ?", row['email'])
+            if cursor.fetchone()[0] == 0:  # If no existing customer with the same email
+                cursor.execute("INSERT INTO Customers (customer_name, email, phone) VALUES (?, ?, ?)", 
+                               row['customer_name'], row['email'], row['phone'])
+    
+    # Load products with duplicate check and null handling
+    for index, row in products_df.iterrows():
+        if pd.notnull(row['product_name']):  # Ensure product name is not null
+            cursor.execute("SELECT COUNT(*) FROM Products WHERE product_name = ?", row['product_name'])
+            if cursor.fetchone()[0] == 0:  # If no existing product with the same name
+                cursor.execute("INSERT INTO Products (product_name) VALUES (?)", row['product_name'])
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+if __name__ == "__main__":
+    transform_data()  # Call the transformation function first
+    load_data()       # Then load the data
